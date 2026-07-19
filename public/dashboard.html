@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Talaba Kabineti — Farmakos</title>
+  <link rel="stylesheet" href="style.css">
+  <!-- Chart.js CDN for statistics diagrams -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+  <!-- Navigation -->
+  <header>
+    <div class="nav-container">
+      <div class="logo" onclick="window.location.href='/'" style="cursor:pointer;">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-pill"><path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"/><path d="m8.5 8.5 7 7"/></svg>
+        Farmakos<span>.uz</span>
+      </div>
+      <ul class="nav-menu">
+        <li><span style="color: var(--text-secondary); font-weight: 500;">Salom, <span id="usernameHeader" style="color: var(--text-primary); font-weight: 700;">Talaba</span>!</span></li>
+        <li><button onclick="handleLogout()" class="btn btn-outline" style="padding: 0.4rem 1rem; font-size: 0.85rem;">Chiqish</button></li>
+      </ul>
+    </div>
+  </header>
+
+  <main>
+    <div class="dashboard-grid">
+      <!-- Sidebar Navigation -->
+      <aside class="glass-panel" style="padding: 1.5rem; height: fit-content;">
+        <h3 style="margin-bottom: 1.5rem; font-size: 1.2rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-secondary);">Menyu</h3>
+        <div class="sidebar-menu">
+          <div class="sidebar-item active" id="menuCategories" onclick="switchView('categories-view')">
+            <span>📚</span> O'quv Bo'limlari
+          </div>
+          <div class="sidebar-item" id="menuStats" onclick="switchView('stats-view')">
+            <span>📊</span> Mening Natijalarim
+          </div>
+        </div>
+      </aside>
+
+      <!-- Main Panel Views -->
+      <section class="glass-panel" id="mainPanel">
+        <!-- Loader -->
+        <div id="loader" style="display:none; text-align:center; padding: 3rem;">
+          <div style="font-size: 2rem; animation: float 1s infinite alternate;">⏳</div>
+          <p style="margin-top: 1rem;">Yuklanmoqda...</p>
+        </div>
+
+        <!-- VIEW 1: Categories Grid -->
+        <div id="categories-view" class="dashboard-view active">
+          <h2>Kategoriyalar</h2>
+          <p>O'rganmoqchi bo'lgan farmatsevtika bo'limini tanlang:</p>
+          <div class="category-grid" id="categoryGrid">
+            <!-- Dynamically populated categories -->
+          </div>
+        </div>
+
+        <!-- VIEW 2: Drugs List inside Category -->
+        <div id="drugs-view" class="dashboard-view">
+          <div class="back-btn" onclick="switchView('categories-view')">
+            <span>&larr;</span> Kategoriyalarga qaytish
+          </div>
+          <h2 id="categoryTitle">Bo'lim nomi</h2>
+          <p id="categoryDesc">Bo'lim tavsifi</p>
+          
+          <div style="display: flex; justify-content: space-between; align-items: center; margin: 2rem 0 1.5rem 0;">
+            <h3 style="margin-bottom:0;">Mavjud Dori Vositalari</h3>
+            <button class="btn btn-primary" id="startQuizBtn" style="padding: 0.5rem 1.25rem;">Ushbu bo'limdan test topshirish</button>
+          </div>
+          
+          <div class="drug-list-container" id="drugList">
+            <!-- Dynamically populated drugs -->
+          </div>
+        </div>
+
+        <!-- VIEW 3: Quiz/Exam Portal -->
+        <div id="quiz-view" class="dashboard-view">
+          <div class="quiz-header">
+            <div>
+              <h2 id="quizCategoryTitle" style="margin-bottom:0.25rem;">Test sinovi</h2>
+              <p style="margin-bottom:0; font-size:0.9rem;">Barcha savollarga javob bering</p>
+            </div>
+            <button class="btn btn-outline" onclick="confirmExitQuiz()" style="padding: 0.5rem 1rem; font-size: 0.85rem;">Testdan chiqish</button>
+          </div>
+
+          <form id="quizForm" onsubmit="handleQuizSubmit(event)">
+            <div id="quizQuestionsContainer">
+              <!-- Dynamically populated questions -->
+            </div>
+            <button type="submit" class="btn btn-secondary" style="width: 100%; margin-top: 1.5rem;">Javoblarni yuborish</button>
+          </form>
+
+          <!-- Quiz Result screen (hidden inside quiz view until submission) -->
+          <div id="quizResultScreen" style="display:none;">
+            <div class="quiz-result-summary">
+              <div class="result-score" id="resultScore">0/0</div>
+              <h3 id="resultTitle">Natija</h3>
+              <p id="resultText">Tabriklaymiz, siz testdan o'tdingiz!</p>
+              <button class="btn btn-primary" onclick="switchView('categories-view')" style="margin-top: 1.5rem;">Mavzularga qaytish</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- VIEW 4: Statistics & User Test History -->
+        <div id="stats-view" class="dashboard-view">
+          <h2>Mening Natijalarim</h2>
+          <p>Siz topshirgan testlar statistikasi va tarixi:</p>
+
+          <div class="stats-grid">
+            <div class="glass-panel" style="padding: 1.5rem; background: rgba(0,0,0,0.2);">
+              <h3 style="font-size: 1.1rem; margin-bottom: 1rem;">Natijalar Diagrammasi</h3>
+              <div class="chart-container">
+                <canvas id="studentStatsChart"></canvas>
+              </div>
+            </div>
+            
+            <div class="glass-panel" style="padding: 1.5rem; background: rgba(0,0,0,0.2);">
+              <h3 style="font-size: 1.1rem; margin-bottom: 1rem;">Tarix</h3>
+              <div class="table-wrapper">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Bo'lim</th>
+                      <th>Jami</th>
+                      <th>To'g'ri</th>
+                      <th>Noto'g'ri</th>
+                      <th>Sana</th>
+                    </tr>
+                  </thead>
+                  <tbody id="statsTableBody">
+                    <!-- Dynamically populated test attempts -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer>
+    <div class="footer-content">
+      <div>&copy; 2026 Farmakos platformasi. Barcha huquqlar himoyalangan.</div>
+      <div>Dasturchi: Sun'iy Intellekt Assistent</div>
+    </div>
+  </footer>
+
+  <!-- Include Frontend Logic script -->
+  <script src="app.js"></script>
+</body>
+</html>

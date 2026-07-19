@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard — Farmakos</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+  <!-- Navigation -->
+  <header>
+    <div class="nav-container">
+      <div class="logo" onclick="window.location.href='/'" style="cursor:pointer;">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-pill"><path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"/><path d="m8.5 8.5 7 7"/></svg>
+        Farmakos<span>.uz</span> (Admin)
+      </div>
+      <ul class="nav-menu">
+        <li><span class="status-pill status-admin" style="font-size: 0.85rem;">Tizim Admini</span></li>
+        <li><button onclick="handleLogout()" class="btn btn-outline" style="padding: 0.4rem 1rem; font-size: 0.85rem;">Chiqish</button></li>
+      </ul>
+    </div>
+  </header>
+
+  <main>
+    <div class="dashboard-grid">
+      <!-- Sidebar Navigation -->
+      <aside class="glass-panel" style="padding: 1.5rem; height: fit-content;">
+        <h3 style="margin-bottom: 1.5rem; font-size: 1.2rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-secondary);">Boshqaruv</h3>
+        <div class="sidebar-menu">
+          <div class="sidebar-item active" id="menuStats" onclick="switchAdminView('stats-view')">
+            <span>📊</span> Statistika & Tahlil
+          </div>
+          <div class="sidebar-item" id="menuLogs" onclick="switchAdminView('logs-view')">
+            <span>👁️</span> Foydalanuvchilar Faoliyati
+          </div>
+          <div class="sidebar-item" id="menuCategories" onclick="switchAdminView('categories-crud-view')">
+            <span>📚</span> Bo'limlarni Tahrirlash
+          </div>
+          <div class="sidebar-item" id="menuDrugs" onclick="switchAdminView('drugs-view')">
+            <span>💊</span> Dorilarni Tahrirlash
+          </div>
+          <div class="sidebar-item" id="menuTests" onclick="switchAdminView('tests-view')">
+            <span>📝</span> Testlarni Tahrirlash
+          </div>
+        </div>
+      </aside>
+
+      <!-- Main Admin Panels -->
+      <section class="glass-panel" id="mainAdminPanel">
+        <!-- Loader -->
+        <div id="adminLoader" style="display:none; text-align:center; padding: 3rem;">
+          <div style="font-size: 2rem; animation: float 1s infinite alternate;">⏳</div>
+          <p style="margin-top: 1rem;">Yuklanmoqda...</p>
+        </div>
+
+        <!-- VIEW 1: Statistics & Analytics Dashboard -->
+        <div id="stats-view" class="dashboard-view active">
+          <h2>Statistika & Tahlil</h2>
+          <p>Tizimning umumiy holati va foydalanuvchilar ko'rsatkichlari:</p>
+
+          <!-- Stat Cards -->
+          <div class="admin-stats-bar">
+            <div class="glass-panel admin-stat-card">
+              <div class="stat-label">O'rganuvchilar</div>
+              <div class="stat-number" id="statUsers">0</div>
+            </div>
+            <div class="glass-panel admin-stat-card">
+              <div class="stat-label">Dorilar jami</div>
+              <div class="stat-number" id="statDrugs">0</div>
+            </div>
+            <div class="glass-panel admin-stat-card">
+              <div class="stat-label">Testlar jami</div>
+              <div class="stat-number" id="statTests">0</div>
+            </div>
+            <div class="glass-panel admin-stat-card">
+              <div class="stat-label">O'rtacha ball</div>
+              <div class="stat-number" id="statAvgScore">0%</div>
+            </div>
+          </div>
+
+          <h3 style="margin-top: 2rem;">Talabalarning Imtihon Natijalari</h3>
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th>Foydalanuvchi</th>
+                  <th>Kategoriya (Bo'lim)</th>
+                  <th>Jami savollar</th>
+                  <th>To'g'ri javob</th>
+                  <th>Noto'g'ri javob</th>
+                  <th>Sana</th>
+                </tr>
+              </thead>
+              <tbody id="adminTestResultsTable">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- VIEW 2: User Logs Activity Feed -->
+        <div id="logs-view" class="dashboard-view">
+          <h2>Foydalanuvchilar Faoliyati</h2>
+          <p>Talabalarning tizimdan foydalanish davomidagi jonli harakatlari (navigation log):</p>
+          
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th>Foydalanuvchi</th>
+                  <th>Harakat tafsiloti (Action)</th>
+                  <th>Vaqti (Timestamp)</th>
+                </tr>
+              </thead>
+              <tbody id="adminLogsTable">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- VIEW 2.5: Categories CRUD -->
+        <div id="categories-crud-view" class="dashboard-view">
+          <div class="action-bar">
+            <div>
+              <h2>O'quv bo'limlari ro'yxati</h2>
+              <p>Tizimdagi dori bo'limlarini (kategoriyalar) tahrirlash yoki yangisini qo'shish:</p>
+            </div>
+            <button class="btn btn-primary" onclick="openCategoryModal('add')">Yangi bo'lim qo'shish</button>
+          </div>
+
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th>Nomi</th>
+                  <th>Tavsifi</th>
+                  <th style="width: 180px; text-align: center;">Amallar</th>
+                </tr>
+              </thead>
+              <tbody id="adminCategoriesTable">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- VIEW 3: Drugs CRUD -->
+        <div id="drugs-view" class="dashboard-view">
+          <div class="action-bar">
+            <div>
+              <h2>Dorilar ro'yxati</h2>
+              <p>Tizimdagi dori vositalarini tahrirlash yoki yangisini qo'shish:</p>
+            </div>
+            <button class="btn btn-primary" onclick="openDrugModal('add')">Yangi dori qo'shish</button>
+          </div>
+
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th>Nomi</th>
+                  <th>Bo'lim</th>
+                  <th>Tavsifi</th>
+                  <th style="width: 180px; text-align: center;">Amallar</th>
+                </tr>
+              </thead>
+              <tbody id="adminDrugsTable">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- VIEW 4: Tests CRUD -->
+        <div id="tests-view" class="dashboard-view">
+          <div class="action-bar">
+            <div>
+              <h2>Test savollari ro'yxati</h2>
+              <p>O'quv bo'limlari bo'yicha test savollarini boshqarish:</p>
+            </div>
+            <button class="btn btn-primary" onclick="openTestModal('add')">Yangi test qo'shish</button>
+          </div>
+
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th>Savol</th>
+                  <th>Bo'lim</th>
+                  <th>Variantlar</th>
+                  <th>To'g'ri javob</th>
+                  <th style="width: 180px; text-align: center;">Amallar</th>
+                </tr>
+              </thead>
+              <tbody id="adminTestsTable">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <!-- DRUG ADD/EDIT MODAL -->
+  <div class="modal-overlay" id="drugModal">
+    <div class="modal-content glass-panel">
+      <div class="modal-header">
+        <h3 id="drugModalTitle">Dori qo'shish</h3>
+        <span class="modal-close" onclick="closeDrugModal()">&times;</span>
+      </div>
+      <form id="drugForm" onsubmit="handleDrugSubmit(event)">
+        <input type="hidden" id="drugId">
+        <div class="form-group">
+          <label for="drugCategory">Bo'lim (Kategoriya)</label>
+          <select id="drugCategory" class="form-input" required style="background: rgba(15,23,42,0.95);">
+            <!-- Loaded dynamically -->
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="drugName">Dori nomi</label>
+          <input type="text" id="drugName" class="form-input" required placeholder="Masalan: Amoksitsillin">
+        </div>
+        <div class="form-group">
+          <label for="drugActiveSubstance">Ta'sir etuvchi modda</label>
+          <input type="text" id="drugActiveSubstance" class="form-input" required placeholder="Masalan: Amoksitsillin trigidrati">
+        </div>
+        <div class="form-group">
+          <label for="drugIndications">Qo'llanilishi (Ko'rsatmalar)</label>
+          <textarea id="drugIndications" class="form-input" rows="2" required placeholder="Qaysi kasalliklarda qo'llaniladi..."></textarea>
+        </div>
+        <div class="form-group">
+          <label for="drugContraindications">Qo'llash mumkin bo'lmagan holatlar (Ziddiyatlar)</label>
+          <textarea id="drugContraindications" class="form-input" rows="2" required placeholder="Allergiya, jigar yetishmovchiligi..."></textarea>
+        </div>
+        <div class="form-group">
+          <label for="drugAdminMethod">Qo'llash usuli</label>
+          <input type="text" id="drugAdminMethod" class="form-input" required placeholder="Masalan: Og'iz orqali, suv bilan yutiladi">
+        </div>
+        <div class="form-group">
+          <label for="drugDosage">Qo'llash dozasi va dozalanishi</label>
+          <textarea id="drugDosage" class="form-input" rows="2" required placeholder="Kattalarga 500 mg dan kuniga 3 mahal..."></textarea>
+        </div>
+        <div class="form-group">
+          <label for="drugSideEffects">Nojo'ya ta'sirlari</label>
+          <textarea id="drugSideEffects" class="form-input" rows="2" required placeholder="Ko'ngil aynishi, teri toshmasi..."></textarea>
+        </div>
+        <div class="form-group">
+          <label for="drugPregnancy">Homiladorlarda qo'llash</label>
+          <select id="drugPregnancy" class="form-input" required style="background: rgba(15,23,42,0.95);">
+            <option value="">Tanlang...</option>
+            <option value="Mumkin (qisqa muddatli va minimal dozalarda)">Mumkin (minimal dozada)</option>
+            <option value="Shifokor tavsiyasi bilan mumkin (foyda xavfdan ustun bo'lganda)">Shifokor tavsiyasi bilan mumkin</option>
+            <option value="Faqat shifokor o'ta zarur deb topganda (xavfsizligi to'liq isbotlanmagan)">Faqat o'ta zarur hollarda</option>
+            <option value="Mumkin emas (faqat o'ta zarur hollarda shifokor nazoratida)">Mumkin emas (ehtiyot bilan)</option>
+            <option value="Mutlaqo mumkin emas (homilaga salbiy ta'sir ko'rsatadi)">Mutlaqo mumkin emas</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="drugPrescription">Berish tartibi</label>
+          <select id="drugPrescription" class="form-input" required style="background: rgba(15,23,42,0.95);">
+            <option value="">Tanlang...</option>
+            <option value="Retseptsiz">Retseptsiz</option>
+            <option value="Retsept bilan">Retsept bilan</option>
+          </select>
+        </div>
+        <div style="display:flex; gap:1rem; margin-top: 1.5rem;">
+          <button type="button" class="btn btn-outline" style="flex:1;" onclick="closeDrugModal()">Bekor qilish</button>
+          <button type="submit" class="btn btn-primary" style="flex:1;" id="drugSubmitBtn">Saqlash</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- TEST ADD/EDIT MODAL -->
+  <div class="modal-overlay" id="testModal">
+    <div class="modal-content glass-panel">
+      <div class="modal-header">
+        <h3 id="testModalTitle">Test qo'shish</h3>
+        <span class="modal-close" onclick="closeTestModal()">&times;</span>
+      </div>
+      <form id="testForm" onsubmit="handleTestSubmit(event)">
+        <input type="hidden" id="testId">
+        <div class="form-group">
+          <label for="testCategory">Bo'lim (Kategoriya)</label>
+          <select id="testCategory" class="form-input" required style="background: rgba(15,23,42,0.95);">
+            <!-- Loaded dynamically -->
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="testQuestion">Savol matni</label>
+          <textarea id="testQuestion" class="form-input" rows="2" required placeholder="Masalan: Paratsetamol qanday xususiyatga ega?"></textarea>
+        </div>
+        <div class="form-group" style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+          <div>
+            <label for="testOptA">Variant A</label>
+            <input type="text" id="testOptA" class="form-input" required placeholder="Variant A">
+          </div>
+          <div>
+            <label for="testOptB">Variant B</label>
+            <input type="text" id="testOptB" class="form-input" required placeholder="Variant B">
+          </div>
+        </div>
+        <div class="form-group" style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+          <div>
+            <label for="testOptC">Variant C</label>
+            <input type="text" id="testOptC" class="form-input" required placeholder="Variant C">
+          </div>
+          <div>
+            <label for="testOptD">Variant D</label>
+            <input type="text" id="testOptD" class="form-input" required placeholder="Variant D">
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="testCorrect">To'g'ri javob varianti</label>
+          <select id="testCorrect" class="form-input" required style="background: rgba(15,23,42,0.95);">
+            <option value="A">A variant</option>
+            <option value="B">B variant</option>
+            <option value="C">C variant</option>
+            <option value="D">D variant</option>
+          </select>
+        </div>
+        <div style="display:flex; gap:1rem; margin-top: 1.5rem;">
+          <button type="button" class="btn btn-outline" style="flex:1;" onclick="closeTestModal()">Bekor qilish</button>
+          <button type="submit" class="btn btn-primary" style="flex:1;" id="testSubmitBtn">Saqlash</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- CATEGORY ADD/EDIT MODAL -->
+  <div class="modal-overlay" id="categoryModal">
+    <div class="modal-content glass-panel">
+      <div class="modal-header">
+        <h3 id="categoryModalTitle">Bo'lim qo'shish</h3>
+        <span class="modal-close" onclick="closeCategoryModal()">&times;</span>
+      </div>
+      <form id="categoryForm" onsubmit="handleCategorySubmit(event)">
+        <input type="hidden" id="categoryId">
+        <div class="form-group">
+          <label for="categoryName">Bo'lim nomi</label>
+          <input type="text" id="categoryName" class="form-input" required placeholder="Masalan: Gormonal dorilar">
+        </div>
+        <div class="form-group">
+          <label for="categoryDesc">Tavsifi</label>
+          <textarea id="categoryDesc" class="form-input" rows="3" required placeholder="Bo'lim haqida batafsil ma'lumot..."></textarea>
+        </div>
+        <div style="display:flex; gap:1rem; margin-top: 1.5rem;">
+          <button type="button" class="btn btn-outline" style="flex:1;" onclick="closeCategoryModal()">Bekor qilish</button>
+          <button type="submit" class="btn btn-primary" style="flex:1;" id="categorySubmitBtn">Saqlash</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <footer>
+    <div class="footer-content">
+      <div>&copy; 2026 Farmakos platformasi. Barcha huquqlar himoyalangan.</div>
+      <div>Dasturchi: Sun'iy Intellekt Assistent</div>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

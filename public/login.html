@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kirish va Ro'yxatdan o'tish — Farmakos</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Navigation -->
+  <header>
+    <div class="nav-container">
+      <div class="logo" onclick="window.location.href='/'" style="cursor:pointer;">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-pill"><path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"/><path d="m8.5 8.5 7 7"/></svg>
+        Farmakos<span>.uz</span>
+      </div>
+      <ul class="nav-menu">
+        <li><a href="/" class="nav-link">Bosh sahifa</a></li>
+        <li><a href="/login.html" class="nav-link active">Kirish</a></li>
+      </ul>
+    </div>
+  </header>
+
+  <!-- Login/Register Card -->
+  <main>
+    <div class="auth-container glass-panel">
+      <div class="auth-tabs">
+        <div class="auth-tab active" id="tabLogin" onclick="switchTab('login')">Kirish</div>
+        <div class="auth-tab" id="tabRegister" onclick="switchTab('register')">Ro'yxatdan o'tish</div>
+      </div>
+
+      <!-- Alert Box -->
+      <div id="authAlert" class="alert-box" style="display:none;"></div>
+
+      <form id="authForm" onsubmit="handleAuthSubmit(event)">
+        <div class="form-group">
+          <label for="username">Foydalanuvchi nomi (Username)</label>
+          <input type="text" id="username" class="form-input" required placeholder="Masalan: shohruh">
+        </div>
+        <div class="form-group">
+          <label for="password">Parol</label>
+          <input type="password" id="password" class="form-input" required placeholder="••••••••">
+        </div>
+        <button type="submit" class="btn btn-primary" style="width:100%; margin-top: 1rem;" id="submitBtn">Kirish</button>
+      </form>
+    </div>
+  </main>
+
+  <footer>
+    <div class="footer-content">
+      <div>&copy; 2026 Farmakos platformasi. Barcha huquqlar himoyalangan.</div>
+      <div>Dasturchi: Sun'iy Intellekt Assistent</div>
+    </div>
+  </footer>
+
+  <script>
+    let currentMode = 'login'; // 'login' or 'register'
+
+    // Check if user already logged in, redirect them
+    fetch('/api/auth/me')
+      .then(res => {
+        if (res.ok) return res.json();
+        throw new Error('Not logged in');
+      })
+      .then(user => {
+        if (user.role === 'admin') {
+          window.location.href = '/admin.html';
+        } else {
+          window.location.href = '/dashboard.html';
+        }
+      })
+      .catch(() => {});
+
+    function switchTab(mode) {
+      currentMode = mode;
+      const tabLogin = document.getElementById('tabLogin');
+      const tabRegister = document.getElementById('tabRegister');
+      const submitBtn = document.getElementById('submitBtn');
+      const alertBox = document.getElementById('authAlert');
+
+      alertBox.style.display = 'none';
+
+      if (mode === 'login') {
+        tabLogin.classList.add('active');
+        tabRegister.classList.remove('active');
+        submitBtn.innerText = 'Kirish';
+      } else {
+        tabLogin.classList.remove('active');
+        tabRegister.classList.add('active');
+        submitBtn.innerText = 'Ro\'yxatdan o\'tish';
+      }
+    }
+
+    function handleAuthSubmit(e) {
+      e.preventDefault();
+      const usernameInput = document.getElementById('username');
+      const passwordInput = document.getElementById('password');
+      const alertBox = document.getElementById('authAlert');
+      const submitBtn = document.getElementById('submitBtn');
+
+      const username = usernameInput.value.trim();
+      const password = passwordInput.value;
+
+      if (!username || !password) {
+        alertBox.className = 'alert-box alert-error';
+        alertBox.innerText = 'Barcha maydonlarni to\'ldiring.';
+        alertBox.style.display = 'block';
+        return;
+      }
+
+      alertBox.style.display = 'none';
+      submitBtn.disabled = true;
+      submitBtn.innerText = 'Yuklanmoqda...';
+
+      const url = currentMode === 'login' ? '/api/auth/login' : '/api/auth/register';
+
+      fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ username, password })
+      })
+      .then(async (res) => {
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.error || 'Server xatoligi');
+        }
+        return data;
+      })
+      .then(data => {
+        alertBox.className = 'alert-box alert-success';
+        alertBox.innerText = currentMode === 'login' ? 'Muvaffaqiyatli kirildi!' : 'Muvaffaqiyatli ro\'yxatdan o\'tildi!';
+        alertBox.style.display = 'block';
+
+        setTimeout(() => {
+          if (data.user.role === 'admin') {
+            window.location.href = '/admin.html';
+          } else {
+            window.location.href = '/dashboard.html';
+          }
+        }, 800);
+      })
+      .catch(err => {
+        submitBtn.disabled = false;
+        submitBtn.innerText = currentMode === 'login' ? 'Kirish' : 'Ro\'yxatdan o\'tish';
+        alertBox.className = 'alert-box alert-error';
+        alertBox.innerText = err.message;
+        alertBox.style.display = 'block';
+      });
+    }
+  </script>
+</body>
+</html>

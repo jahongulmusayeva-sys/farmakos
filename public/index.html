@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Farmakos — Farmatsevtik Ta'lim Platformasi</title>
+  <meta name="description" content="Farmatsevtika sohasiga ilk qadam qo'yuvchilar uchun maxsus tayyorlangan interaktiv o'quv va sinov platformasi.">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Navigation -->
+  <header>
+    <div class="nav-container">
+      <div class="logo" id="navLogo">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-pill"><path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"/><path d="m8.5 8.5 7 7"/></svg>
+        Farmakos<span>.uz</span>
+      </div>
+      <ul class="nav-menu">
+        <li><a href="/" class="nav-link active">Bosh sahifa</a></li>
+        <li><a href="/login.html" class="nav-link" id="navAuthLink">Kirish / Ro'yxatdan o'tish</a></li>
+      </ul>
+    </div>
+  </header>
+
+  <!-- Hero / Introduction -->
+  <main>
+    <section class="hero-section">
+      <div class="hero-text">
+        <h1>Farmatsevtika olamiga ilk qadam</h1>
+        <p>Farmakos — farmatsevtika sohasiga qiziquvchilar va yangi boshlovchilar uchun yaratilgan innovatsion o'quv platformasi. Bu yerda siz dorilar bilan ishlash asoslari, ularning nojo'ya ta'sirlari, qo'llash qoidalari bilan tanishishingiz va olingan bilimlarni testlar orqali mustahkamlashingiz mumkin.</p>
+        <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+          <a href="/login.html" class="btn btn-primary" id="heroStartBtn">O'rganishni boshlash</a>
+          <a href="/login.html" class="btn btn-outline" id="heroAdminBtn">Admin Panel</a>
+        </div>
+      </div>
+      <div class="hero-visual">
+        <div class="floating-pill"></div>
+        <div class="pill-card">
+          <div style="font-size: 5rem; line-height: 1; margin-bottom: 1.5rem; filter: drop-shadow(0 0 20px rgba(13, 148, 136, 0.4));">💊</div>
+          <h3>Interaktiv Darsliklar</h3>
+          <p style="margin-top: 1rem; margin-bottom: 0;">Bizning katalogimiz orqali dori guruhlarini o'rganing va testlarni muvaffaqiyatli topshirib, o'z bilim darajangizni oshiring.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Pharmaceutical Importance Section -->
+    <section class="glass-panel" style="margin: 2rem 0; padding: 2.5rem; border-left: 6px solid var(--primary);">
+      <h2 style="font-size: 1.8rem; margin-bottom: 1rem; color: var(--primary-hover);">Farmatsevtika sohasining ahamiyati</h2>
+      <p style="font-size: 1.1rem; line-height: 1.7; color: var(--text-primary); margin-bottom: 0;">
+        Farmatsevtika — bu shunchaki dorilar ishlab chiqarish va ularni tarqatish emas, balki insoniyat salomatligi hamda hayotini asrash va yaxshilash ilmidir. To'g'ri tanlangan dori vositasi va uning to'g'ri qo'llanilishi millionlab insonlarning shifo topishiga zamin yaratadi. Ushbu sohada xatolikka yo'l qo'yib bo'lmaydi, shu sababli dori guruhlari va ularning ta'sir doiralarini mukammal o'rganish har bir bo'lajak mutaxassis uchun hayotiy ahamiyatga egadir.
+      </p>
+    </section>
+
+    <!-- Key Features List -->
+    <section style="margin: 4rem 0;">
+      <h2 style="text-align: center; margin-bottom: 3rem;">Nega aynan Farmakos?</h2>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem;">
+        <div class="glass-panel">
+          <h3 style="color: var(--primary-hover); margin-bottom: 0.5rem;">📚 Tizimli Ma'lumotlar</h3>
+          <p style="margin-bottom: 0;">Barcha dori vositalari o'z guruhlariga ajratilgan bo'lib, nojo'ya ta'sirlari va qo'llanish ko'rsatmalari to'liq taqdim etilgan.</p>
+        </div>
+        <div class="glass-panel">
+          <h3 style="color: var(--secondary-hover); margin-bottom: 0.5rem;">⚡ Bilimlar Sinovi</h3>
+          <p style="margin-bottom: 0;">Har bir bo'lim uchun tayyorlangan maxsus testlar va nazorat savollari yordamida o'z bilimingizni sinab ko'ring.</p>
+        </div>
+        <div class="glass-panel">
+          <h3 style="color: var(--accent); margin-bottom: 0.5rem;">📊 Monitoring va Nazorat</h3>
+          <p style="margin-bottom: 0;">Tizim admini foydalanuvchilarning barcha natijalarini kuzatib boradi va qaysi testlarda ko'proq xato qilinganini tahlil qiladi.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    <div class="footer-content">
+      <div>&copy; 2026 Farmakos platformasi. Barcha huquqlar himoyalangan.</div>
+      <div>Dasturchi: Sun'iy Intellekt Assistent</div>
+    </div>
+  </footer>
+
+  <script>
+    // Check if user is already logged in, update buttons accordingly
+    fetch('/api/auth/me')
+      .then(res => {
+        if (res.ok) return res.json();
+        throw new Error('Unauthenticated');
+      })
+      .then(user => {
+        const navAuthLink = document.getElementById('navAuthLink');
+        const heroStartBtn = document.getElementById('heroStartBtn');
+        const heroAdminBtn = document.getElementById('heroAdminBtn');
+
+        if (user.role === 'admin') {
+          navAuthLink.innerText = 'Admin Panel';
+          navAuthLink.href = '/admin.html';
+          heroStartBtn.innerText = 'Admin Panelga o\'tish';
+          heroStartBtn.href = '/admin.html';
+          heroStartBtn.className = 'btn btn-secondary';
+          heroAdminBtn.style.display = 'none';
+        } else {
+          navAuthLink.innerText = 'Shaxsiy Kabinet';
+          navAuthLink.href = '/dashboard.html';
+          heroStartBtn.innerText = 'O\'quv portaliga o\'tish';
+          heroStartBtn.href = '/dashboard.html';
+          heroAdminBtn.style.display = 'none';
+        }
+      })
+      .catch(() => {
+        // User not logged in, keep default buttons
+      });
+  </script>
+</body>
+</html>

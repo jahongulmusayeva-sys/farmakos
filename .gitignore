@@ -1,0 +1,7 @@
+node_modules/
+db/database.sqlite
+.gemini/
+.agents/
+.git/
+package-lock.json
+*.log
