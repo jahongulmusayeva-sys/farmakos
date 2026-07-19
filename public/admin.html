@@ -102,8 +102,15 @@
 
         <!-- VIEW 2: User Logs Activity Feed -->
         <div id="logs-view" class="dashboard-view">
-          <h2>Foydalanuvchilar Faoliyati</h2>
-          <p>Talabalarning tizimdan foydalanish davomidagi jonli harakatlari (navigation log):</p>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+            <div>
+              <h2 style="margin-bottom: 0.25rem;">Foydalanuvchilar Faoliyati</h2>
+              <p style="margin-bottom: 0;">Talabalarning tizimdan foydalanish davomidagi jonli harakatlari (navigation log):</p>
+            </div>
+            <button class="btn btn-outline" onclick="clearAllLogs()" style="border-color: #ef4444; color: #ef4444; padding: 0.5rem 1rem; font-size: 0.9rem;">
+              🧹 Barcha jurnallarni tozalash
+            </button>
+          </div>
           
           <div class="table-wrapper">
             <table>
@@ -112,6 +119,7 @@
                   <th>Foydalanuvchi</th>
                   <th>Harakat tafsiloti (Action)</th>
                   <th>Vaqti (Timestamp)</th>
+                  <th style="width: 100px; text-align: center;">Amallar</th>
                 </tr>
               </thead>
               <tbody id="adminLogsTable">

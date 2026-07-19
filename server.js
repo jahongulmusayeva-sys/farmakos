@@ -355,6 +355,26 @@ app.get('/api/admin/logs', requireAdmin, async (req, res) => {
   }
 });
 
+// Admin clear all logs
+app.delete('/api/admin/logs', requireAdmin, async (req, res) => {
+  try {
+    await dbRun("DELETE FROM user_logs");
+    res.json({ message: "Barcha faoliyat jurnallari o'chirildi." });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Admin delete single log
+app.delete('/api/admin/logs/:id', requireAdmin, async (req, res) => {
+  try {
+    await dbRun("DELETE FROM user_logs WHERE id = ?", [req.params.id]);
+    res.json({ message: "Harakat jurnali o'chirildi." });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Admin get all test results
 app.get('/api/admin/test-results', requireAdmin, async (req, res) => {
   try {

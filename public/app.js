@@ -565,7 +565,7 @@ function loadAdminLogs() {
       tbody.innerHTML = '';
 
       if (logs.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;">Harakatlar tarixi bo\'sh.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Harakatlar tarixi bo\'sh.</td></tr>';
       } else {
         logs.forEach(log => {
           const date = new Date(log.created_at).toLocaleString('uz-UZ');
@@ -574,11 +574,54 @@ function loadAdminLogs() {
             <td><strong>${log.username}</strong></td>
             <td>${log.action_details}</td>
             <td><span style="font-size:0.8rem;">${date}</span></td>
+            <td style="text-align: center;">
+              <button onclick="deleteLog(${log.id})" class="btn-action btn-delete" title="O'chirish" style="background:none; border:none; color:#ef4444; font-size:1.1rem; cursor:pointer;">🗑️</button>
+            </td>
           `;
           tbody.appendChild(tr);
         });
       }
       showAdminLoader(false);
+    })
+    .catch(err => {
+      console.error(err);
+      showAdminLoader(false);
+    });
+}
+
+// Clear all activity logs
+function clearAllLogs() {
+  if (!confirm("Haqiqatan ham barcha foydalanuvchilar faoliyati jurnallarini butunlay o'chirmoqchisiz?")) return;
+  
+  showAdminLoader(true);
+  fetch('/api/admin/logs', { method: 'DELETE' })
+    .then(res => {
+      if (res.ok) {
+        loadAdminLogs();
+      } else {
+        alert("Xatolik yuz berdi.");
+        showAdminLoader(false);
+      }
+    })
+    .catch(err => {
+      console.error(err);
+      showAdminLoader(false);
+    });
+}
+
+// Delete single activity log
+function deleteLog(id) {
+  if (!confirm("Ushbu yozuvni o'chirmoqchisiz?")) return;
+  
+  showAdminLoader(true);
+  fetch(`/api/admin/logs/${id}`, { method: 'DELETE' })
+    .then(res => {
+      if (res.ok) {
+        loadAdminLogs();
+      } else {
+        alert("Xatolik yuz berdi.");
+        showAdminLoader(false);
+      }
     })
     .catch(err => {
       console.error(err);
