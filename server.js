@@ -7,6 +7,9 @@ const bcrypt = require('bcryptjs');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Enable reverse proxy trust (critical for Render.com HTTPS and mobile cookies)
+app.set('trust proxy', 1);
+
 // Connect to SQLite Database
 const dbPath = path.join(__dirname, 'db', 'database.sqlite');
 const db = new sqlite3.Database(dbPath, (err) => {
@@ -25,7 +28,9 @@ app.use(session({
   resave: false,
   saveUninitialized: false,
   cookie: {
-    maxAge: 1000 * 60 * 60 * 24 // 1 day
+    maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
+    sameSite: 'lax',
+    secure: false
   }
 }));
 
@@ -172,11 +177,11 @@ app.get('/api/auth/me', (req, res) => {
 });
 
 // ----------------------------------------------------
-// STUDENT PORTAL / MAIN PORTAL API
+// STUDENT PORTAL / MAIN PORTAL API (Open for both students & guests)
 // ----------------------------------------------------
 
-// Get all categories
-app.get('/api/categories', requireAuth, async (req, res) => {
+// Get all categories (Public / Guests / Students)
+app.get('/api/categories', async (req, res) => {
   try {
     const categories = await dbAll("SELECT * FROM categories");
     res.json(categories);
@@ -186,7 +191,7 @@ app.get('/api/categories', requireAuth, async (req, res) => {
 });
 
 // Get drugs in a category (or all drugs)
-app.get('/api/drugs', requireAuth, async (req, res) => {
+app.get('/api/drugs', async (req, res) => {
   const { category_id } = req.query;
   try {
     let sql = "SELECT drugs.*, categories.name as category_name FROM drugs JOIN categories ON drugs.category_id = categories.id";
@@ -203,7 +208,7 @@ app.get('/api/drugs', requireAuth, async (req, res) => {
 });
 
 // Get tests for a category (optionally filtered by category_id)
-app.get('/api/tests', requireAuth, async (req, res) => {
+app.get('/api/tests', async (req, res) => {
   const { category_id } = req.query;
   if (!category_id) {
     return res.status(400).json({ error: "category_id talab etiladi." });
@@ -220,9 +225,9 @@ app.get('/api/tests', requireAuth, async (req, res) => {
   }
 });
 
-// Submit test answers and grade them
-app.post('/api/tests/submit', requireAuth, async (req, res) => {
-  const { category_id, answers } = req.body; // answers is an object: { questionId: "A/B/C/D" }
+// Submit test answers and grade them (supports both logged in students and guests)
+app.post('/api/tests/submit', async (req, res) => {
+  const { category_id, answers } = req.body;
   if (!category_id || !answers) {
     return res.status(400).json({ error: "category_id va javoblar (answers) talab etiladi." });
   }
@@ -256,21 +261,21 @@ app.post('/api/tests/submit', requireAuth, async (req, res) => {
 
     const totalQuestions = dbTests.length;
 
-    // Save results
-    await dbRun(
-      "INSERT INTO test_results (user_id, category_id, total_questions, correct_answers, wrong_answers) VALUES (?, ?, ?, ?, ?)",
-      [req.session.userId, category_id, totalQuestions, correctCount, wrongCount]
-    );
+    // Save results if user is logged in
+    if (req.session && req.session.userId) {
+      await dbRun(
+        "INSERT INTO test_results (user_id, category_id, total_questions, correct_answers, wrong_answers) VALUES (?, ?, ?, ?, ?)",
+        [req.session.userId, category_id, totalQuestions, correctCount, wrongCount]
+      );
 
-    // Get category name for logging
-    const category = await dbGet("SELECT name FROM categories WHERE id = ?", [category_id]);
-    const categoryName = category ? category.name : "noma'lum bo'lim";
+      const category = await dbGet("SELECT name FROM categories WHERE id = ?", [category_id]);
+      const categoryName = category ? category.name : "noma'lum bo'lim";
 
-    // Log this action
-    await dbRun(
-      "INSERT INTO user_logs (user_id, action_details) VALUES (?, ?)",
-      [req.session.userId, `${categoryName} testini topshirdi. Natija: ${correctCount}/${totalQuestions}`]
-    );
+      await dbRun(
+        "INSERT INTO user_logs (user_id, action_details) VALUES (?, ?)",
+        [req.session.userId, `${categoryName} testini topshirdi. Natija: ${correctCount}/${totalQuestions}`]
+      );
+    }
 
     res.json({
       success: true,
@@ -285,13 +290,15 @@ app.post('/api/tests/submit', requireAuth, async (req, res) => {
 });
 
 // Log student navigation activity
-app.post('/api/logs', requireAuth, async (req, res) => {
+app.post('/api/logs', async (req, res) => {
   const { action_details } = req.body;
   if (!action_details) {
     return res.status(400).json({ error: "action_details kiritilishi shart." });
   }
   try {
-    await dbRun("INSERT INTO user_logs (user_id, action_details) VALUES (?, ?)", [req.session.userId, action_details]);
+    if (req.session && req.session.userId) {
+      await dbRun("INSERT INTO user_logs (user_id, action_details) VALUES (?, ?)", [req.session.userId, action_details]);
+    }
     res.json({ success: true });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -444,14 +451,14 @@ app.delete('/api/admin/categories/:id', requireAdmin, async (req, res) => {
 
 // Create drug
 app.post('/api/admin/drugs', requireAdmin, async (req, res) => {
-  const { category_id, name, active_substance, indications, contraindications, administration_method, dosage, side_effects, pregnancy_safety, prescription_status } = req.body;
-  if (!category_id || !name || !active_substance || !indications || !contraindications || !administration_method || !dosage || !side_effects || !pregnancy_safety || !prescription_status) {
+  const { category_id, name, active_substance, indications, administration_method, dosage, allowed_age, pregnancy_safety, prescription_status } = req.body;
+  if (!category_id || !name || !active_substance || !indications || !administration_method || !dosage || !allowed_age || !pregnancy_safety || !prescription_status) {
     return res.status(400).json({ error: "Barcha maydonlarni to'ldirish shart." });
   }
   try {
     const result = await dbRun(
-      "INSERT INTO drugs (category_id, name, active_substance, indications, contraindications, administration_method, dosage, side_effects, pregnancy_safety, prescription_status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-      [category_id, name, active_substance, indications, contraindications, administration_method, dosage, side_effects, pregnancy_safety, prescription_status]
+      "INSERT INTO drugs (category_id, name, active_substance, indications, administration_method, dosage, allowed_age, pregnancy_safety, prescription_status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      [category_id, name, active_substance, indications, administration_method, dosage, allowed_age, pregnancy_safety, prescription_status]
     );
     res.status(201).json({ success: true, id: result.lastID });
   } catch (error) {
@@ -462,14 +469,14 @@ app.post('/api/admin/drugs', requireAdmin, async (req, res) => {
 // Update drug
 app.put('/api/admin/drugs/:id', requireAdmin, async (req, res) => {
   const { id } = req.params;
-  const { category_id, name, active_substance, indications, contraindications, administration_method, dosage, side_effects, pregnancy_safety, prescription_status } = req.body;
-  if (!category_id || !name || !active_substance || !indications || !contraindications || !administration_method || !dosage || !side_effects || !pregnancy_safety || !prescription_status) {
+  const { category_id, name, active_substance, indications, administration_method, dosage, allowed_age, pregnancy_safety, prescription_status } = req.body;
+  if (!category_id || !name || !active_substance || !indications || !administration_method || !dosage || !allowed_age || !pregnancy_safety || !prescription_status) {
     return res.status(400).json({ error: "Barcha maydonlarni to'ldirish shart." });
   }
   try {
     await dbRun(
-      "UPDATE drugs SET category_id = ?, name = ?, active_substance = ?, indications = ?, contraindications = ?, administration_method = ?, dosage = ?, side_effects = ?, pregnancy_safety = ?, prescription_status = ? WHERE id = ?",
-      [category_id, name, active_substance, indications, contraindications, administration_method, dosage, side_effects, pregnancy_safety, prescription_status, id]
+      "UPDATE drugs SET category_id = ?, name = ?, active_substance = ?, indications = ?, administration_method = ?, dosage = ?, allowed_age = ?, pregnancy_safety = ?, prescription_status = ? WHERE id = ?",
+      [category_id, name, active_substance, indications, administration_method, dosage, allowed_age, pregnancy_safety, prescription_status, id]
     );
     res.json({ success: true });
   } catch (error) {

@@ -44,10 +44,22 @@ function checkAuth() {
       }
     })
     .catch(() => {
-      // If not authenticated, redirect to login page unless already there
+      // If not authenticated, allow guests on dashboard and public pages
       const path = window.location.pathname;
-      if (!path.includes('login.html') && path !== '/' && path !== '/index.html') {
+      if (path.includes('admin.html')) {
         window.location.href = '/login.html';
+      } else if (path.includes('dashboard.html')) {
+        currentUser = { role: 'guest', username: 'Mehmon' };
+        const usernameHeader = document.getElementById('usernameHeader');
+        if (usernameHeader) {
+          usernameHeader.innerHTML = 'Mehmon <span style="font-size:0.75rem;font-weight:normal;opacity:0.8;">(Erkin o\'quvchi)</span>';
+        }
+        const logoutBtn = document.querySelector('button[onclick="handleLogout()"]');
+        if (logoutBtn) {
+          logoutBtn.innerText = 'Kirish / Ro\'yxatdan o\'tish';
+          logoutBtn.onclick = () => { window.location.href = '/login.html'; };
+        }
+        loadCategories();
       }
     });
 }
@@ -58,6 +70,65 @@ function handleLogout() {
       window.location.href = '/';
     })
     .catch(err => console.error('Logout error:', err));
+}
+
+// Category theming helper
+function getCategoryTheme(name) {
+  const n = (name || '').toLowerCase();
+  if (n.includes('yod')) {
+    return {
+      cssClass: 'theme-yodlar',
+      icon: '🧪',
+      tag: 'Yod va Gormonlar',
+      color: '#f59e0b'
+    };
+  }
+  if (n.includes('ayol')) {
+    return {
+      cssClass: 'theme-ayollar',
+      icon: '🌸',
+      tag: 'Ayollar Salomatligi va Onalik',
+      color: '#ec4899'
+    };
+  }
+  if (n.includes('yurak')) {
+    return {
+      cssClass: 'theme-yurak',
+      icon: '🫀',
+      tag: 'Kardiologiya va Qon Tomirlar',
+      color: '#ef4444'
+    };
+  }
+  if (n.includes('diabet') || n.includes('saxar')) {
+    return {
+      cssClass: 'theme-saxar',
+      icon: '🩸',
+      tag: 'Qandli Diabet va Endokrin',
+      color: '#06b6d4'
+    };
+  }
+  if (n.includes('bosim') || n.includes('davlen')) {
+    return {
+      cssClass: 'theme-davlenya',
+      icon: '🩺',
+      tag: 'Gipertoniya va Qon Bosimi',
+      color: '#8b5cf6'
+    };
+  }
+  if (n.includes('gelmint') || n.includes('qurt')) {
+    return {
+      cssClass: 'theme-qurt',
+      icon: '🌿',
+      tag: 'Antiparasitar va Tozalovchi',
+      color: '#10b981'
+    };
+  }
+  return {
+    cssClass: 'theme-default',
+    icon: '💊',
+    tag: 'Farmatsevtik Bo\'lim',
+    color: '#0d9488'
+  };
 }
 
 // ----------------------------------------------------
@@ -106,13 +177,17 @@ function loadCategories() {
       grid.innerHTML = '';
       
       categories.forEach(cat => {
+        const theme = getCategoryTheme(cat.name);
         const card = document.createElement('div');
-        card.className = 'glass-panel category-card';
+        card.className = `glass-panel category-card ${theme.cssClass}`;
         card.innerHTML = `
+          <div class="cat-theme-badge">
+            <span>${theme.icon}</span> ${theme.tag}
+          </div>
           <h3>${cat.name}</h3>
-          <p>${cat.description}</p>
-          <div style="margin-top: 1rem; color: var(--primary-hover); font-weight:600; display:flex; align-items:center; gap:0.5rem;">
-            O'rganish va test topshirish <span>&rarr;</span>
+          <p style="margin-bottom:0.75rem;">${cat.description || ''}</p>
+          <div style="margin-top: auto; color: ${theme.color}; font-weight:600; display:flex; align-items:center; gap:0.5rem; font-size:0.9rem;">
+            Dorilar va testlar <span>&rarr;</span>
           </div>
         `;
         card.onclick = () => loadCategoryDrugs(cat.id, cat.name, cat.description);
@@ -130,65 +205,71 @@ function loadCategories() {
 function loadCategoryDrugs(categoryId, categoryName, categoryDesc) {
   currentCategoryId = categoryId;
   showLoader(true);
+  const theme = getCategoryTheme(categoryName);
   
-  // Log user activity
+  // Log user activity (if logged in)
   fetch('/api/logs', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ action_details: `"${categoryName}" o'quv bo'limiga kirdi` })
-  }).catch(err => console.error(err));
+  }).catch(() => {});
 
   fetch(`/api/drugs?category_id=${categoryId}`)
     .then(res => res.json())
     .then(drugs => {
-      document.getElementById('categoryTitle').innerText = categoryName;
+      const catTitleEl = document.getElementById('categoryTitle');
+      catTitleEl.innerHTML = `<span style="margin-right:0.5rem;">${theme.icon}</span> ${categoryName}`;
+      catTitleEl.style.color = theme.color;
       document.getElementById('categoryDesc').innerText = categoryDesc;
       
       const listContainer = document.getElementById('drugList');
       listContainer.innerHTML = '';
 
       if (drugs.length === 0) {
-        listContainer.innerHTML = '<p>Ushbu bo\'limda hozircha dori ma\'lumotlari mavjud emas.</p>';
+        listContainer.innerHTML = '<p style="text-align:center; padding:2rem; color:#94a3b8;">Ushbu bo\'limda hozircha dori ma\'lumotlari kiritilmoqda.</p>';
       } else {
         drugs.forEach(drug => {
           const card = document.createElement('div');
           card.className = 'glass-panel drug-card';
+          card.style.borderLeft = `5px solid ${theme.color}`;
+
           const rxBadge = drug.prescription_status === 'Retseptsiz'
-            ? `<span style="background:rgba(16,185,129,0.18);color:#10b981;border:1px solid rgba(16,185,129,0.4);padding:0.2rem 0.7rem;border-radius:999px;font-size:0.75rem;font-weight:600;">Retseptsiz</span>`
-            : `<span style="background:rgba(245,158,11,0.18);color:#f59e0b;border:1px solid rgba(245,158,11,0.4);padding:0.2rem 0.7rem;border-radius:999px;font-size:0.75rem;font-weight:600;">Retsept bilan</span>`;
+            ? `<span style="background:rgba(16,185,129,0.18);color:#10b981;border:1px solid rgba(16,185,129,0.4);padding:0.25rem 0.75rem;border-radius:999px;font-size:0.75rem;font-weight:600;">🟢 Retseptsiz</span>`
+            : `<span style="background:rgba(245,158,11,0.18);color:#f59e0b;border:1px solid rgba(245,158,11,0.4);padding:0.25rem 0.75rem;border-radius:999px;font-size:0.75rem;font-weight:600;">🟡 Retsept bilan</span>`;
+
+          const ageBadge = `<span class="age-badge">👶 ${drug.allowed_age || 'Barcha yoshdagilarga'}</span>`;
+
           card.innerHTML = `
-            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;flex-wrap:wrap;">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;flex-wrap:wrap;border-bottom:1px solid rgba(255,255,255,0.06);padding-bottom:0.75rem;">
               <div>
-                <h3 style="margin:0 0 0.25rem;">${drug.name}</h3>
-                <p style="margin:0;color:#94a3b8;font-size:0.9rem;">Ta'sir etuvchi modda: <strong style="color:#c4b5fd;">${drug.active_substance || '—'}</strong></p>
+                <h3 style="margin:0 0 0.35rem; color:${theme.color};">${drug.name}</h3>
+                <p style="margin:0;color:#94a3b8;font-size:0.9rem;">Ta'sir etuvchi modda: <strong style="color:#f8fafc;">${drug.active_substance || '—'}</strong></p>
               </div>
               <div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap;">
+                ${ageBadge}
                 ${rxBadge}
               </div>
             </div>
-            <div class="drug-metadata" style="margin-top:1rem;">
+
+            <div class="drug-metadata" style="margin-top:1rem; border-top:none;">
               <div class="metadata-section">
-                <h4>&#127812; Qo'llanilishi</h4>
+                <h4>🎯 Qo'llanilishi</h4>
                 <p>${drug.indications || '—'}</p>
               </div>
-              <div class="metadata-section" style="border-left: 3px solid rgba(239,68,68,0.6);">
-                <h4 style="color:#f87171;">&#128683; Qo'llash mumkin bo'lmagan holatlar</h4>
-                <p>${drug.contraindications || '—'}</p>
-              </div>
               <div class="metadata-section">
-                <h4>&#128138; Qo'llash usuli</h4>
+                <h4>💊 Qo'llash usuli</h4>
                 <p>${drug.administration_method || '—'}</p>
               </div>
               <div class="metadata-section">
-                <h4>&#9878; Doza va dozalanishi</h4>
+                <h4>⚕️ Doza va dozalanishi</h4>
                 <p>${drug.dosage || '—'}</p>
               </div>
               <div class="metadata-section">
-                <h4>&#9888;&#65039; Nojo'ya ta'sirlari</h4>
-                <p>${drug.side_effects || '—'}</p>
+                <h4>👶 Nechi yoshdan mumkin</h4>
+                <p><strong style="color:#38bdf8;">${drug.allowed_age || 'Barcha yoshdagilarga'}</strong></p>
               </div>
-              <div class="metadata-section">
-                <h4>&#129809; Homiladorlarda qo'llash</h4>
+              <div class="metadata-section" style="grid-column: 1 / -1;">
+                <h4>🤰 Homiladorlarda qo'llash</h4>
                 <p>${drug.pregnancy_safety || '—'}</p>
               </div>
             </div>
@@ -199,6 +280,7 @@ function loadCategoryDrugs(categoryId, categoryName, categoryDesc) {
 
       // Configure start quiz button
       const startQuizBtn = document.getElementById('startQuizBtn');
+      startQuizBtn.style.background = theme.color;
       startQuizBtn.onclick = () => startCategoryQuiz(categoryId, categoryName);
 
       showLoader(false);
@@ -808,10 +890,9 @@ function openDrugModal(mode, drugId = null) {
               document.getElementById('drugName').value = drug.name;
               document.getElementById('drugActiveSubstance').value = drug.active_substance || '';
               document.getElementById('drugIndications').value = drug.indications || '';
-              document.getElementById('drugContraindications').value = drug.contraindications || '';
               document.getElementById('drugAdminMethod').value = drug.administration_method || '';
               document.getElementById('drugDosage').value = drug.dosage || '';
-              document.getElementById('drugSideEffects').value = drug.side_effects || '';
+              document.getElementById('drugAllowedAge').value = drug.allowed_age || '';
               document.getElementById('drugPregnancy').value = drug.pregnancy_safety || '';
               document.getElementById('drugPrescription').value = drug.prescription_status || '';
               modal.classList.add('active');
@@ -832,10 +913,9 @@ function handleDrugSubmit(e) {
   const name = document.getElementById('drugName').value.trim();
   const active_substance = document.getElementById('drugActiveSubstance').value.trim();
   const indications = document.getElementById('drugIndications').value.trim();
-  const contraindications = document.getElementById('drugContraindications').value.trim();
   const administration_method = document.getElementById('drugAdminMethod').value.trim();
   const dosage = document.getElementById('drugDosage').value.trim();
-  const side_effects = document.getElementById('drugSideEffects').value.trim();
+  const allowed_age = document.getElementById('drugAllowedAge').value.trim();
   const pregnancy_safety = document.getElementById('drugPregnancy').value;
   const prescription_status = document.getElementById('drugPrescription').value;
 
@@ -845,7 +925,7 @@ function handleDrugSubmit(e) {
   fetch(url, {
     method: method,
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ category_id, name, active_substance, indications, contraindications, administration_method, dosage, side_effects, pregnancy_safety, prescription_status })
+    body: JSON.stringify({ category_id, name, active_substance, indications, administration_method, dosage, allowed_age, pregnancy_safety, prescription_status })
   })
   .then(res => {
     if (!res.ok) throw new Error('Dori ma\'lumotlarini saqlashda xatolik.');

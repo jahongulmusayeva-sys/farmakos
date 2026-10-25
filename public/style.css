@@ -927,3 +927,141 @@ footer {
   }
 }
 
+/* ==================================================== */
+/* THEMATIC STYLING PER CATEGORY                        */
+/* ==================================================== */
+
+.cat-theme-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  margin-bottom: 0.75rem;
+}
+
+/* Yodlar */
+.theme-yodlar {
+  border-top: 3px solid #f59e0b !important;
+  background: linear-gradient(145deg, rgba(30, 41, 59, 0.6) 0%, rgba(245, 158, 11, 0.06) 100%) !important;
+}
+.theme-yodlar:hover {
+  box-shadow: 0 12px 30px rgba(0,0,0,0.4), 0 0 25px rgba(245, 158, 11, 0.25) !important;
+  border-color: #f59e0b !important;
+}
+.theme-yodlar .cat-theme-badge {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.35);
+}
+.theme-yodlar h3 { color: #fbbf24 !important; }
+
+/* Ayollar bo'limi */
+.theme-ayollar {
+  border-top: 3px solid #ec4899 !important;
+  background: linear-gradient(145deg, rgba(30, 41, 59, 0.6) 0%, rgba(236, 72, 153, 0.08) 100%) !important;
+}
+.theme-ayollar:hover {
+  box-shadow: 0 12px 30px rgba(0,0,0,0.4), 0 0 25px rgba(236, 72, 153, 0.25) !important;
+  border-color: #ec4899 !important;
+}
+.theme-ayollar .cat-theme-badge {
+  background: rgba(236, 72, 153, 0.15);
+  color: #f472b6;
+  border: 1px solid rgba(236, 72, 153, 0.35);
+}
+.theme-ayollar h3 { color: #f472b6 !important; }
+
+/* Yurak dorilar */
+.theme-yurak {
+  border-top: 3px solid #ef4444 !important;
+  background: linear-gradient(145deg, rgba(30, 41, 59, 0.6) 0%, rgba(239, 68, 68, 0.08) 100%) !important;
+}
+.theme-yurak:hover {
+  box-shadow: 0 12px 30px rgba(0,0,0,0.4), 0 0 25px rgba(239, 68, 68, 0.25) !important;
+  border-color: #ef4444 !important;
+}
+.theme-yurak .cat-theme-badge {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.35);
+}
+.theme-yurak h3 { color: #f87171 !important; }
+
+/* Qandli diabet (saxar) */
+.theme-saxar {
+  border-top: 3px solid #06b6d4 !important;
+  background: linear-gradient(145deg, rgba(30, 41, 59, 0.6) 0%, rgba(6, 182, 212, 0.08) 100%) !important;
+}
+.theme-saxar:hover {
+  box-shadow: 0 12px 30px rgba(0,0,0,0.4), 0 0 25px rgba(6, 182, 212, 0.25) !important;
+  border-color: #06b6d4 !important;
+}
+.theme-saxar .cat-theme-badge {
+  background: rgba(6, 182, 212, 0.15);
+  color: #38bdf8;
+  border: 1px solid rgba(6, 182, 212, 0.35);
+}
+.theme-saxar h3 { color: #38bdf8 !important; }
+
+/* Qon bosimi (davleniya) */
+.theme-davlenya {
+  border-top: 3px solid #8b5cf6 !important;
+  background: linear-gradient(145deg, rgba(30, 41, 59, 0.6) 0%, rgba(139, 92, 246, 0.08) 100%) !important;
+}
+.theme-davlenya:hover {
+  box-shadow: 0 12px 30px rgba(0,0,0,0.4), 0 0 25px rgba(139, 92, 246, 0.25) !important;
+  border-color: #8b5cf6 !important;
+}
+.theme-davlenya .cat-theme-badge {
+  background: rgba(139, 92, 246, 0.15);
+  color: #a78bfa;
+  border: 1px solid rgba(139, 92, 246, 0.35);
+}
+.theme-davlenya h3 { color: #a78bfa !important; }
+
+/* Gelmint (qurt) dorilari */
+.theme-qurt {
+  border-top: 3px solid #10b981 !important;
+  background: linear-gradient(145deg, rgba(30, 41, 59, 0.6) 0%, rgba(16, 185, 129, 0.08) 100%) !important;
+}
+.theme-qurt:hover {
+  box-shadow: 0 12px 30px rgba(0,0,0,0.4), 0 0 25px rgba(16, 185, 129, 0.25) !important;
+  border-color: #10b981 !important;
+}
+.theme-qurt .cat-theme-badge {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.35);
+}
+.theme-qurt h3 { color: #34d399 !important; }
+
+/* Default theme */
+.theme-default {
+  border-top: 3px solid #0d9488 !important;
+  background: linear-gradient(145deg, rgba(30, 41, 59, 0.6) 0%, rgba(13, 148, 136, 0.08) 100%) !important;
+}
+.theme-default .cat-theme-badge {
+  background: rgba(13, 148, 136, 0.15);
+  color: #2dd4bf;
+  border: 1px solid rgba(13, 148, 136, 0.35);
+}
+
+/* Age suitability box */
+.age-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: rgba(14, 165, 233, 0.14);
+  color: #38bdf8;
+  border: 1px solid rgba(14, 165, 233, 0.35);
+  padding: 0.25rem 0.65rem;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+

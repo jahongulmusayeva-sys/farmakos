@@ -29,10 +29,9 @@ db.serialize(async () => {
     name TEXT NOT NULL,
     active_substance TEXT NOT NULL,
     indications TEXT NOT NULL,
-    contraindications TEXT NOT NULL,
     administration_method TEXT NOT NULL,
     dosage TEXT NOT NULL,
-    side_effects TEXT NOT NULL,
+    allowed_age TEXT NOT NULL,
     pregnancy_safety TEXT NOT NULL,
     prescription_status TEXT NOT NULL,
     FOREIGN KEY(category_id) REFERENCES categories(id) ON DELETE CASCADE
